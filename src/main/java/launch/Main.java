@@ -1,9 +1,13 @@
 package launch;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.WebResourceSet;
@@ -12,10 +16,27 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.webresources.DirResourceSet;
 import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
-import org.apache.tomcat.util.scan.Constants;
-import org.apache.tomcat.util.scan.StandardJarScanFilter;
 
 public class Main {
+
+    private static Properties getProperties() throws IOException {
+        InputStream inputStream = null;
+        Properties prop = new Properties();
+        try {
+            String propFileName = "config.properties";
+            inputStream = Main.class.getClassLoader().getResourceAsStream(propFileName);
+            if (inputStream != null) {
+                prop.load(inputStream);
+            } else {
+                throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
+            }
+        } catch (Exception e) {
+            System.out.println("Exception: " + e);
+        } finally {
+            inputStream.close();
+        }
+        return prop;
+    }
 
     private static File getRootFolder() {
         try {
@@ -54,6 +75,7 @@ public class Main {
         if (!webContentFolder.exists()) {
             webContentFolder = Files.createTempDirectory("default-doc-base").toFile();
         }
+
         StandardContext ctx = (StandardContext) tomcat.addWebapp("", webContentFolder.getAbsolutePath());
         //Set execution independent of current thread context classloader (compatibility with exec:java mojo)
         ctx.setParentClassLoader(Main.class.getClassLoader());
@@ -74,6 +96,11 @@ public class Main {
         }
         resources.addPreResources(resourceSet);
         ctx.setResources(resources);
+
+        String videosTempPath = getProperties().getProperty("temp.path");
+        String videoCtxPath = getProperties().getProperty("videos-context.path");
+        System.out.println("adding static context '" + videosTempPath + "' mapped to /" + videoCtxPath);
+        tomcat.addWebapp(videoCtxPath, videosTempPath);
 
         tomcat.start();
         tomcat.getServer().await();
