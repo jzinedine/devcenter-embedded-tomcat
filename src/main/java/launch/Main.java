@@ -18,8 +18,7 @@ import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 
 public class Main {
-
-    private static Properties getProperties() throws IOException {
+    public static Properties getProperties() throws IOException {
         InputStream inputStream = null;
         Properties prop = new Properties();
         try {

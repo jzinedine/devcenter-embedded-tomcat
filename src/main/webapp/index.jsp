@@ -1,5 +1,3 @@
-<%@ page import="java.io.File" %>
-<%@ page import="launch.Main" %>
 <html>
 <head>
 </head>
